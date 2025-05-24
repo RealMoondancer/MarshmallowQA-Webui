@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Interactive Marshmallow Viewer</title>
+    <style>
+        body { font-family: sans-serif; padding: 1em; }
+        li { margin: .5em 0; }
+    </style>
+</head>
+<body>
+<noscript>This page needs Javascript to work.</noscript>
+<p id="loading">Loading, please wait</p>
+<p id="notfound" style="display: none">No messages were found, please try again by opening <a href="https://marshmallow-qa.com/messages">Marshmallow QA</a> again.</p>
+
+<script>
+    // When this page loads, grab the uuid from the URL and fetch the data.
+    let messages = [];
+    document.addEventListener('DOMContentLoaded', () => {
+        const path = window.location.pathname;
+        const uuid = path.substring(path.lastIndexOf('/') + 1);
+        fetch(`/api/messages/${uuid}`)
+            .then(res => {
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        document.getElementById('loading').style.display = 'none';
+                        document.getElementById('notfound').style.display = 'block';
+                    } else {
+                        document.getElementById('loading').innerText = 'An error occurred';
+                    }
+                    throw new Error('Not found');
+                }
+                return res.json();
+            })
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (!data.items || data.items.length === 0) {
+                    document.getElementById('notfound').style.display = 'block';
+                }
+                data.items.forEach(item => {
+                    messages.push(item);
+                });
+                console.log(messages);
+            })
+            .catch(err => {
+                document.getElementById('message-list').innerHTML =
+                    '<li><em>Error loading messages.</em></li>';
+                console.error(err);
+            });
+    });
+</script>
+</body>
+</html>
